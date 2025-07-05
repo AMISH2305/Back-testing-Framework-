@@ -32,13 +32,27 @@ class Backtester:
     def report(self):
         print("=== Backtest Report ===")
         equity = self.portfolio.equity_curve
+        trades = self.portfolio.trade_log
+
         if not equity:
             print("No trades or equity data.")
             return
 
+        # Performance metrics
         metrics = calculate_performance_metrics(equity)
         for k, v in metrics.items():
             print(f"{k}: {v:.2f}")
 
+        # Trade analysis
+        trade_stats = analyze_trades(trades)
+        for k, v in trade_stats.items():
+            print(f"{k}: {v:.2f}" if isinstance(v, float) else f"{k}: {v}")
+
+        # Export log
+        export_trade_log_to_csv(trades)
+
+        # Plots
         plot_equity_curve(equity)
+        drawdown_heatmap(equity)
+
 
