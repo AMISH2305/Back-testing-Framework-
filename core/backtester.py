@@ -8,6 +8,11 @@ class Backtester:
         self.strategy = strategy
         self.execution = ExecutionHandler()
         self.portfolio = Portfolio()
+        
+    def calculate_position_size(self, stop_distance, risk_percent=0.02):
+        risk_amount = self.portfolio.equity * risk_percent
+        units = risk_amount / stop_distance
+        return min(units, 500000) 
 
     def run(self):
         signals = self.strategy.generate_signals(self.data)
@@ -20,14 +25,28 @@ class Backtester:
             order = self.execution.execute_order(signal, price, spread)
 
             if order:
+                stop_distance = 0.0020  # 20 pips
+                take_profit_distance = 0.0040  # 40 pips
+
+                if signal == 1:  # Buy
+                    sl = order['fill_price'] - stop_distance
+                    tp = order['fill_price'] + take_profit_distance
+                elif signal == -1:  # Sell
+                    sl = order['fill_price'] + stop_distance
+                    tp = order['fill_price'] - take_profit_distance
+
+                lot_size = self.calculate_position_size(stop_distance)
+
                 self.portfolio.enter_trade(
                     signal=signal,
                     fill_price=order['fill_price'],
                     commission=order['commission'],
-                    date=date
+                    date=date,
+                    sl=sl,
+                    tp=tp,
+                    lot_size=lot_size
                 )
-
-            self.portfolio.update(date, price)
+                
 
     def report(self):
         print("=== Backtest Report ===")
