@@ -1,5 +1,6 @@
 from core.execution import ExecutionHandler
 from core.portfolio import Portfolio
+from utils.metrics import plot_equity_curve, calculate_performance_metrics
 
 class Backtester:
     def __init__(self, data, strategy):
@@ -29,8 +30,15 @@ class Backtester:
             self.portfolio.update(date, price)
 
     def report(self):
-        equity = [eq for _, eq in self.portfolio.equity_curve]
-        final = equity[-1] if equity else 0
-        print(f"Final Equity: {final:.2f}")
-        print(f"Number of Trades: {len(self.portfolio.trade_log)}")
+        print("=== Backtest Report ===")
+        equity = self.portfolio.equity_curve
+        if not equity:
+            print("No trades or equity data.")
+            return
+
+        metrics = calculate_performance_metrics(equity)
+        for k, v in metrics.items():
+            print(f"{k}: {v:.2f}")
+
+        plot_equity_curve(equity)
 
